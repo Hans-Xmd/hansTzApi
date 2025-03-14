@@ -1,67 +1,39 @@
 const express = require("express");
 const cors = require("cors");
 const ytdl = require("ytdl-core");
-const axios = require("axios");
 
 const app = express();
 app.use(cors());
 
-app.get("/download", async (req, res) => {
-    const videoURL = req.query.url;
-    
-    if (!videoURL || !ytdl.validateURL(videoURL)) {
-        return res.status(400).json({ 
-            status: false,
-            creator: "HansTz",
-            error: "Invalid YouTube URL"
-        });
-    }
-
+app.get("/download/dlmp3", async (req, res) => {
     try {
-        const info = await ytdl.getInfo(videoURL);
-        const videoId = info.videoDetails.videoId;
-        const title = info.videoDetails.title;
-        const downloadUrl = `https://keith-api.vercel.app/stream?url=${encodeURIComponent(videoURL)}`;
+        const url = req.query.url;
 
-        res.json({
-            status: true,
-            creator: "HansTz",
-            result: {
-                downloadUrl: downloadUrl,
-                title: title,
-                format: "mp3",
-                quality: "128kbps"
-            }
-        });
+        // Validate the YouTube URL
+        if (!url || !ytdl.validateURL(url)) {
+            return res.status(400).json({ error: "Invalid YouTube URL" });
+        }
 
+        const info = await ytdl.getInfo(url);
+        const title = info.videoDetails.title.replace(/[^\w\s]/gi, "");  // Clean filename
+
+        console.log("Downloading:", title); // Log the video title
+
+        // Set headers for the response
+        res.header("Content-Disposition", `attachment; filename="${title}.mp3"`);
+        res.header("Content-Type", "audio/mpeg");
+
+        // Fetch the audio stream and pipe it to the response
+        ytdl(url, {
+            filter: "audioonly",
+            quality: "highestaudio",
+        }).pipe(res);
     } catch (error) {
-        console.error("Error:", error);
-        res.status(500).json({
-            status: false,
-            creator: "HansTz",
-            error: "Failed to process request"
-        });
+        console.error("Download error:", error);  // Log the error for debugging
+        res.status(500).json({ error: error.message }); // Send a more detailed error response
     }
 });
 
-app.get("/stream", async (req, res) => {
-    const videoURL = req.query.url;
-    if (!videoURL || !ytdl.validateURL(videoURL)) {
-        return res.status(400).json({ error: "Invalid YouTube URL" });
-    }
-
-    try {
-        res.setHeader("Content-Disposition", "attachment; filename=audio.mp3");
-        res.setHeader("Content-Type", "audio/mpeg");
-
-        ytdl(videoURL, { filter: "audioonly", quality: "highestaudio" }).pipe(res);
-    } catch (error) {
-        console.error("Error streaming:", error);
-        res.status(500).json({ error: "Error streaming audio" });
-    }
-});
-
+// Set the port for the server to listen on
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
