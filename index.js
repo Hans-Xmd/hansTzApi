@@ -32,7 +32,7 @@ app.get("/download", async (req, res) => {
                 quality: "128kbps",
                 title: title,
                 thumbnail: thumbnail,
-                download_url: `https://your-vercel-app.vercel.app/stream?url=${encodeURIComponent(videoURL)}`
+                download_url: `https://hans-tz-api.vercel.app/stream?url=${encodeURIComponent(videoURL)}`
             }
         });
 
