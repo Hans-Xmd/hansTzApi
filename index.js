@@ -1,18 +1,18 @@
 const express = require("express");
 const cors = require("cors");
 const ytdl = require("ytdl-core");
+const axios = require("axios");
 
 const app = express();
 app.use(cors());
 
 app.get("/download", async (req, res) => {
     const videoURL = req.query.url;
-
+    
     if (!videoURL || !ytdl.validateURL(videoURL)) {
         return res.status(400).json({ 
+            status: false,
             creator: "HansTz",
-            status: 400,
-            success: false,
             error: "Invalid YouTube URL"
         });
     }
@@ -21,27 +21,24 @@ app.get("/download", async (req, res) => {
         const info = await ytdl.getInfo(videoURL);
         const videoId = info.videoDetails.videoId;
         const title = info.videoDetails.title;
-        const thumbnail = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+        const downloadUrl = `https://your-vercel-app.vercel.app/stream?url=${encodeURIComponent(videoURL)}`;
 
         res.json({
+            status: true,
             creator: "HansTz",
-            status: 200,
-            success: true,
             result: {
-                type: "audio",
-                quality: "128kbps",
+                downloadUrl: downloadUrl,
                 title: title,
-                thumbnail: thumbnail,
-                download_url: `https://hans-tz-api.vercel.app/stream?url=${encodeURIComponent(videoURL)}`
+                format: "mp3",
+                quality: "128kbps"
             }
         });
 
     } catch (error) {
         console.error("Error:", error);
         res.status(500).json({
+            status: false,
             creator: "HansTz",
-            status: 500,
-            success: false,
             error: "Failed to process request"
         });
     }
