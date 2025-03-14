@@ -21,7 +21,7 @@ app.get("/download", async (req, res) => {
         const info = await ytdl.getInfo(videoURL);
         const videoId = info.videoDetails.videoId;
         const title = info.videoDetails.title;
-        const downloadUrl = `https://your-vercel-app.vercel.app/stream?url=${encodeURIComponent(videoURL)}`;
+        const downloadUrl = `https://keith-api.vercel.app/stream?url=${encodeURIComponent(videoURL)}`;
 
         res.json({
             status: true,
